@@ -1,0 +1,232 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DATAVI - Mais que dados, visão.</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;900&family=Inter:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    .grid-bg {
+      background-image: linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+    .gradient-cta {
+      background: linear-gradient(90deg, #1E3A8A 0%, #3B82F6 100%);
+      transition: all 0.3s ease;
+    }
+    .gradient-cta:hover {
+      background: linear-gradient(90deg, #3B82F6 0%, #60A5FA 100%);
+    }
+    .underline-animate {
+      position: relative;
+    }
+    .underline-animate::after {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 2px;
+      bottom: -2px;
+      left: 0;
+      background: #3B82F6;
+      transition: width 0.3s ease;
+    }
+    .underline-animate:hover::after {
+      width: 100%;
+    }
+    .fade-up {
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeUp 0.8s ease forwards;
+    }
+    @keyframes fadeUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .word-swap-container {
+      display: inline-block;
+      position: relative;
+      min-width: 200px;
+      min-height: 1.5em;
+      line-height: 1.2;
+      vertical-align: top;
+      overflow: visible;
+    }
+    .word-swap {
+      display: inline-block;
+      position: absolute;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    .word-swap.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .animate-draw {
+      stroke-dasharray: 500;
+      stroke-dashoffset: 500;
+      animation: draw 4s ease forwards;
+    }
+    @keyframes draw {
+      to {
+        stroke-dashoffset: 0;
+      }
+    }
+    .animate-pulse {
+      animation: pulse 2s ease infinite;
+    }
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.3);
+      }
+    }
+    .axis {
+      stroke: url(#gradient);
+      stroke-opacity: 0.4;
+      stroke-width: 2;
+      animation: fadeInAxis 4s ease forwards;
+    }
+    @keyframes fadeInAxis {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 0.4;
+      }
+    }
+    .quadrant {
+      stroke: #D1D5DB;
+      stroke-opacity: 0.05;
+      stroke-width: 1;
+    }
+  </style>
+</head>
+<body class="bg-black grid-bg text-white font-inter">
+  <header class="min-h-screen flex items-center justify-center py-12 md:py-0">
+    <div class="container mx-auto px-4">
+      <div class="flex flex-col md:flex-row items-start gap-16 px-6 md:px-12">
+        <!-- Text Section -->
+        <div class="w-full md:w-1/2 space-y-8 text-left fade-up">
+          <h1 class="text-5xl md:text-8xl font-poppins font-black leading-tight">
+            Transforme<br>Dados em<br><span class="text-blue-500 word-swap-container">
+              <span class="word-swap active" data-word="Decisão">Decisão</span>
+              <span class="word-swap" data-word="Inspiração">Inspiração</span>
+              <span class="word-swap" data-word="Visão">Visão</span>
+            </span>
+          </h1>
+          <p class="text-xl md:text-2xl text-gray-400 max-w-prose">
+            Soluções de dados que impulsionam decisões estratégicas.
+          </p>
+          <div class="flex flex-wrap gap-4">
+            <a href="#" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-xl font-semibold text-white">
+              Quero Diagnóstico
+            </a>
+            <a href="https://github.com/datavii" class="px-6 py-3 text-blue-500 hover:underline">
+              Ver Serviços
+            </a>
+          </div>
+        </div>
+        <!-- SVG Visual (Gráfico Ascendente com Eixos e Quadrantes) -->
+        <div class="w-full md:w-1/2 mt-12 md:mt-0 fade-up flex justify-center">
+          <svg viewBox="0 0 300 300" class="w-full max-w-md">
+            <defs>
+              <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#1E3A8A;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#3B82F6;stop-opacity:1" />
+              </linearGradient>
+            </defs>
+            <!-- Quadrantes (grade de fundo) -->
+            <!-- Linhas horizontais -->
+            <line x1="15" y1="225" x2="285" y2="225" class="quadrant" />
+            <line x1="15" y1="150" x2="285" y2="150" class="quadrant" />
+            <line x1="15" y1="75" x2="285" y2="75" class="quadrant" />
+            <!-- Linhas verticais -->
+            <line x1="90" y1="285" x2="90" y2="15" class="quadrant" />
+            <line x1="150" y1="285" x2="150" y2="15" class="quadrant" />
+            <line x1="210" y1="285" x2="210" y2="15" class="quadrant" />
+            <!-- Eixo X -->
+            <line x1="15" y1="285" x2="285" y2="285" class="axis" />
+            <!-- Eixo Y -->
+            <line x1="15" y1="285" x2="15" y2="15" class="axis" />
+            <!-- Linha ascendente do gráfico -->
+            <path d="M 30,270 L 90,210 L 150,150 L 210,120 L 270,60" stroke="url(#gradient)" stroke-width="6" fill="none" class="animate-draw"/>
+            <!-- Pontos de dados -->
+            <circle cx="30" cy="270" r="7" fill="#3B82F6" class="animate-pulse"/>
+            <circle cx="90" cy="210" r="7" fill="#3B82F6" class="animate-pulse" style="animation-delay: 0.2s"/>
+            <circle cx="150" cy="150" r="7" fill="#3B82F6" class="animate-pulse" style="animation-delay: 0.4s"/>
+            <circle cx="210" cy="120" r="7" fill="#3B82F6" class="animate-pulse" style="animation-delay: 0.6s"/>
+            <circle cx="270" cy="60" r="7" fill="#3B82F6" class="animate-pulse" style="animation-delay: 0.8s"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </header>
+  <script>
+    const words = document.querySelectorAll('.word-swap');
+    let index = 0;
+
+    function swapWord() {
+      const currentWord = words[index];
+      const nextIndex = (index + 1) % words.length;
+      const nextWord = words[nextIndex];
+
+      currentWord.classList.remove('active');
+      nextWord.classList.add('active');
+
+      index = nextIndex;
+    }
+
+    // Start with "Decisão" visible
+    words[0].classList.add('active');
+
+    // Swap every 2 seconds infinitely
+    setInterval(swapWord, 2000);
+  </script>
+</body>
+</html>
